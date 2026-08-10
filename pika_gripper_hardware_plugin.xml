@@ -1,0 +1,7 @@
+<library path="pika_gripper_hardware_interface">
+  <class name="pika_gripper_hardware_interface/PikaGripperInterface"
+         type="pika_gripper_hardware_interface::PikaGripperInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>ros2_control SystemInterface for the AgileX Pika gripper (serial/USB).</description>
+  </class>
+</library>
