@@ -236,18 +236,20 @@ std::optional<double> filter_command(
 {
   if (!std::isfinite(target)) {return std::nullopt;}
 
-  double clamped = std::clamp(target, cfg.min_width, cfg.max_width);
-
+  const double clamped_target = std::clamp(target, cfg.min_width, cfg.max_width);
   const bool first_write = !std::isfinite(last_sent);
-  const double baseline = first_write ? measured : last_sent;
 
-  const double max_step = cfg.max_speed * period_s;
-  clamped = std::clamp(clamped, baseline - max_step, baseline + max_step);
-
-  if (!first_write && std::fabs(clamped - last_sent) < cfg.deadband) {
+  if (!first_write && std::fabs(clamped_target - last_sent) < cfg.deadband) {
     return std::nullopt;
   }
-  return clamped;
+
+  const double baseline = first_write ? measured : last_sent;
+  if (cfg.max_speed > 0.0 && period_s > 0.0) {
+    const double max_step = cfg.max_speed * period_s;
+    return std::clamp(clamped_target, baseline - max_step, baseline + max_step);
+  }
+
+  return clamped_target;
 }
 
 }  // namespace pika_gripper_hardware_interface::protocol
