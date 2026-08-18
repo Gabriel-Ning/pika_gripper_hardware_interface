@@ -44,7 +44,7 @@ Default `max_width` = `0.045` m travel ≈ `0.09` m opening.
 
 | Name | Default | Role |
 |------|---------|------|
-| `stale_warn_s` | `0.1` | Throttled WARN when last motor frame is older than this. |
+| `stale_warn_s` | `0.2` | Throttled WARN when last motor frame is older than this (configured via xacro, fallback 0.1s in C++). |
 | `stale_error_s` | `0.5` | `read()` returns `ERROR` (hardware fault path) past this age. |
 
 ## Safety behavior (not parameters)
