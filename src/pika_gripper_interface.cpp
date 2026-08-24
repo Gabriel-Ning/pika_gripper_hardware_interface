@@ -166,7 +166,8 @@ hardware_interface::CallbackReturn PikaGripperInterface::on_activate(
   }
 
   // Sync command to measured finger travel to prevent jumps on activation.
-  const double width = cached_width_.load();
+  const double raw = cached_width_.load();
+  const double width = protocol::clamp_finger_travel(filter_cfg_, raw);
   set_command(joint_name_ + "/" + hardware_interface::HW_IF_POSITION, width);
   set_state(joint_name_ + "/" + hardware_interface::HW_IF_POSITION, width);
   last_sent_width_ = std::numeric_limits<double>::quiet_NaN();
@@ -219,7 +220,9 @@ hardware_interface::return_type PikaGripperInterface::read(
     return hardware_interface::return_type::OK;
   }
 
-  set_state(joint_name_ + "/" + hardware_interface::HW_IF_POSITION, cached_width_.load());
+  const double raw = cached_width_.load();
+  const double width = protocol::clamp_finger_travel(filter_cfg_, raw);
+  set_state(joint_name_ + "/" + hardware_interface::HW_IF_POSITION, width);
   set_state(joint_name_ + "/" + hardware_interface::HW_IF_VELOCITY, cached_velocity_.load());
   set_state(joint_name_ + "/" + hardware_interface::HW_IF_EFFORT, cached_current_ma_.load());
   set_state(if_voltage_, cached_voltage_.load());
@@ -253,8 +256,10 @@ hardware_interface::return_type PikaGripperInterface::write(
 
   const double target =
     get_command(joint_name_ + "/" + hardware_interface::HW_IF_POSITION);
+  const double measured = protocol::clamp_finger_travel(
+    filter_cfg_, cached_width_.load());
   const auto filtered = protocol::filter_command(
-    filter_cfg_, target, last_sent_width_, cached_width_.load(), period.seconds());
+    filter_cfg_, target, last_sent_width_, measured, period.seconds());
   if (!filtered.has_value()) {
     return hardware_interface::return_type::OK;
   }

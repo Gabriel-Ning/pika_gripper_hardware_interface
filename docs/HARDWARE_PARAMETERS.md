@@ -52,5 +52,7 @@ Default `max_width` = `0.045` m travel ≈ `0.09` m opening.
 These always apply and are not launch-tunable:
 
 - Non-finite commands are rejected.
-- First write after activate baselines to measured finger travel.
+- `read()` clamps reported finger travel to `[min_width, max_width]`.
+- First write after activate baselines to **clamped** measured finger travel.
+- Write targets are clamped to the same range (then rate-limited).
 - Deactivate / destructor / `on_error` send DISABLE.

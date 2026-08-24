@@ -230,20 +230,29 @@ double width_velocity(double angle_rad, double speed_rad_s)
 
 // ── Command filter ───────────────────────────────────────────────────────────
 
+double clamp_finger_travel(const CommandFilterConfig & cfg, double travel)
+{
+  if (!std::isfinite(travel)) {
+    return cfg.min_width;
+  }
+  return std::clamp(travel, cfg.min_width, cfg.max_width);
+}
+
 std::optional<double> filter_command(
   const CommandFilterConfig & cfg, double target, double last_sent,
   double measured, double period_s)
 {
   if (!std::isfinite(target)) {return std::nullopt;}
 
-  const double clamped_target = std::clamp(target, cfg.min_width, cfg.max_width);
+  const double clamped_target = clamp_finger_travel(cfg, target);
   const bool first_write = !std::isfinite(last_sent);
 
   if (!first_write && std::fabs(clamped_target - last_sent) < cfg.deadband) {
     return std::nullopt;
   }
 
-  const double baseline = first_write ? measured : last_sent;
+  const double baseline =
+    first_write ? clamp_finger_travel(cfg, measured) : last_sent;
   if (cfg.max_speed > 0.0 && period_s > 0.0) {
     const double max_step = cfg.max_speed * period_s;
     return std::clamp(clamped_target, baseline - max_step, baseline + max_step);

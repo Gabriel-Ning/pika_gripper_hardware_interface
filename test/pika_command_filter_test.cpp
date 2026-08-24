@@ -76,10 +76,23 @@ TEST(CommandFilter, DeadbandSkipsUnchangedTarget)
   EXPECT_TRUE(protocol::filter_command(cfg, 0.021, 0.020, 0.020, 0.01).has_value());
 }
 
-TEST(CommandFilter, FirstWriteBypassesDeadband)
+TEST(CommandFilter, FirstWriteClampsMeasuredBaseline)
 {
   const auto cfg = default_cfg();
-  const auto out = protocol::filter_command(cfg, 0.0202, kNaN, 0.0202, 0.01);
-  ASSERT_TRUE(out.has_value());
-  EXPECT_NEAR(*out, 0.0202, 1e-12);
+  const auto from_low = protocol::filter_command(cfg, 0.045, kNaN, -0.01, 0.01);
+  ASSERT_TRUE(from_low.has_value());
+  EXPECT_NEAR(*from_low, 0.001, 1e-12);
+
+  const auto from_high = protocol::filter_command(cfg, 0.0, kNaN, 0.08, 0.01);
+  ASSERT_TRUE(from_high.has_value());
+  EXPECT_NEAR(*from_high, 0.044, 1e-12);
+}
+
+TEST(ClampFingerTravel, ClampsAndMapsNonFiniteToMin)
+{
+  const auto cfg = default_cfg();
+  EXPECT_DOUBLE_EQ(protocol::clamp_finger_travel(cfg, -0.01), 0.0);
+  EXPECT_DOUBLE_EQ(protocol::clamp_finger_travel(cfg, 0.08), 0.045);
+  EXPECT_DOUBLE_EQ(protocol::clamp_finger_travel(cfg, 0.02), 0.02);
+  EXPECT_DOUBLE_EQ(protocol::clamp_finger_travel(cfg, kNaN), cfg.min_width);
 }

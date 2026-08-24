@@ -120,8 +120,12 @@ struct CommandFilterConfig
 // Returns the finger travel to send this cycle, or nullopt to skip the send.
 // last_sent: previously dispatched travel, NaN if never sent (then the
 // measured travel is the step baseline). Non-finite targets are rejected.
+// Target and measured baseline are clamped to [min_width, max_width].
 std::optional<double> filter_command(
   const CommandFilterConfig & cfg, double target, double last_sent,
   double measured, double period_s);
+
+// Clamp ROS finger travel to [min_width, max_width]. Non-finite → min_width.
+double clamp_finger_travel(const CommandFilterConfig & cfg, double travel);
 
 }  // namespace pika_gripper_hardware_interface::protocol
